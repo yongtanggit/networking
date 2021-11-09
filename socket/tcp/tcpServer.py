@@ -3,29 +3,26 @@
 import socket
 import threading
 
-IP = '0.0.0.0'
-PORT = 6666
+# Listening socket
+ip_port = ('0.0.0.0', 6666)
 
-def main():
-    server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    server.bind((IP, PORT))
-    server.listen(2)
-    print(f'[*] Listening on {IP}:{PORT}')
+# Create a server and start listening
+server = socket.socket()
+server.bind(ip_port)
+server.listen()
 
+# Method receiving and sending data
+def com():
     while True:
-        client, address = server.accept()
-        print(f'[*] Accepted connection from {address[0]}:{address[1]}')
-        client_handler = threading.Thread(target=handle_client, args=(client,))
-        client_handler.start()
+      s, remote = server.accept()
+      print(f'[*] Connecting with {remote}')
+      data = s.recv(1024)
+      print(data.decode())
+      s.send('ack: {}'.format(data.decode()).encode())
 
-def handle_client(client_socket):
-    with client_socket as sock:
-        request = sock.recv(1024)
-        print(f'[*] Received: {request.decode("utf-8")}')
-        sock.send(b'ACK')
-
-if __name__ == '__main__':
-    main()
+# Start receiving and sending data
+com_thread = threading.Thread(target = com)
+com_thread.start()
 
 
 
