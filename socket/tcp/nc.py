@@ -69,7 +69,7 @@ def server_upload():
           print(buf)
           break
 '''
-def server_excute(cmd):
+def server_execute(cmd):
     cmd = cmd.strip()
     if not cmd:
         return
@@ -84,7 +84,7 @@ def server_shell():
     while True:
        client.send(b"#> ")
        cmd = client.recv(1024).decode()
-       result = server_excute(cmd)
+       result = server_execute(cmd)
        client.send(result.encode())
 
 
