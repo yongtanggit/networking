@@ -9,8 +9,11 @@ netcat.py -t 192.168.1.108 -p 5555 # connect to server
 
 import argparse
 import socket
-import threading
+import shlex
 import subprocess
+import sys
+import textwrap
+import threading
 '''
 parser = argparse.ArgumentParser()
 parser.add_argument('-t', nargs='?',type=str,help='host')
@@ -69,13 +72,7 @@ def server_upload():
           print(buf)
           break
 '''
-def server_execute(cmd):
-    cmd = cmd.strip()
-    if not cmd:
-        return
-    result = subprocess.check_output(cmd)
-    result = (result.decode())
-    return result
+
 '''
 
 def server_shell():
@@ -125,6 +122,13 @@ raddr=(socket_raddr[1])
 
 server_shell(raddr)
 '''
+def server_execute(cmd):
+    cmd = cmd.strip()
+    if not cmd:
+        return
+    result = subprocess.check_output(shlex.split(cmd), stderr=subprocess.STDOUT)
+    result = (result.decode())
+    return result
 
 # Listening socket
 l_ip_port = ('0.0.0.0', 6666)
@@ -136,7 +140,7 @@ server.listen()
 s, remote = server.accept()
 print(f'[*] Connecting with {remote}')
 
-# Method receiving and sending data
+# Function
 def com():
     while True:
       s.send(b"#> ")
@@ -147,6 +151,8 @@ def com():
 # Start receiving and sending data
 com_thread = threading.Thread(target = com)
 com_thread.start()
+
+
 
 
 
